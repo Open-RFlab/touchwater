@@ -11,6 +11,12 @@
 #include <sstream>
 #include <cstring>
 #include <fstream>
+#include <algorithm>
+#include <string>
+
+enum ParseOptionState { Freq, Param, Format, Z };
+enum ParamFormat {Sf, Yf, Zf, Hf, Gf};
+enum DataFormat { DB, MA, RI};
 
 class TouchstoneParser {
 
@@ -22,10 +28,16 @@ class TouchstoneParser {
     bool optionLineFound = false;
     bool dataValid = false;
 
-    uint64_t freqMul = 0;
+    uint64_t freqMul = 1;
+    ParamFormat paramFormat = Sf;
+    DataFormat dataFormat = MA;
+    uint64_t Z0 = 50;
 
     void ParseV1();
     void ParseV2();
+    bool detectFreqUnit(std::string sF);
+    bool detectFormat(std::string sF);
+    bool detectParam(std::string sF);
   
   public:
     /* Init with a file */
