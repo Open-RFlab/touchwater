@@ -13,10 +13,18 @@
 #include <fstream>
 #include <algorithm>
 #include <string>
+#include <vector>
 
 enum ParseOptionState { Freq, Param, Format, Z };
 enum ParamFormat {Sf, Yf, Zf, Hf, Gf};
 enum DataFormat { DB, MA, RI};
+
+typedef std::complex<double> ComplexDouble;
+
+struct SData{
+    uint64_t freq = 0;
+    std::vector<std::complex<double>> S;
+};
 
 class TouchstoneParser {
 
@@ -31,13 +39,18 @@ class TouchstoneParser {
     uint64_t freqMul = 1;
     ParamFormat paramFormat = Sf;
     DataFormat dataFormat = MA;
-    uint64_t Z0 = 50;
+    double Z0 = 50;
+
+    std::vector<SData> Sparam;
 
     void ParseV1();
     void ParseV2();
     bool detectFreqUnit(std::string sF);
     bool detectFormat(std::string sF);
     bool detectParam(std::string sF);
+    bool isNumber(std::string s);
+
+    void convertMAtoRI(std::vector<double>& n, uint8_t count);
   
   public:
     /* Init with a file */
