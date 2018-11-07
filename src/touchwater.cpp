@@ -13,6 +13,7 @@ void TouchstoneParser::ParseV1() {
     std::string delimiter = " ";
 
 	while(getline(filebuffer, s)) {
+        std::replace(s.begin(), s.end(), '\t', ' ');
 		if(s[0] == '!') { /* Detected Comment */
 			this->comments = this->comments + s;
 		} else if(s[0] == '#') { /* Detected Option Line */
@@ -75,14 +76,19 @@ void TouchstoneParser::ParseV1() {
     std::istringstream datastream(data);
     uint8_t order = 0;
 
+    uint64_t freq = 0;
+    uint64_t oldFreq = 0;
+    bool isNoise = false;
+
     while(getline(datastream, s, '\r')) {
         size_t offset = 0;
         bool last = false;
 
         uint8_t count = 0;
-        uint64_t freq = 0;
 
         std::vector<double> n;
+        double Fmin = 0.0;
+        double normRes = 0.0;
 
         while(!last && count < 9) {
             size_t pos = s.find(delimiter, offset);
@@ -103,7 +109,18 @@ void TouchstoneParser::ParseV1() {
                     if(count == 0) { /* Frequency */
                         freq = std::atof(sPar.c_str()) * (double)freqMul;
                     } else if (count >= 1) {
-                        n.push_back(std::stod(sPar));
+                        if(freq > oldFreq && !isNoise) { /* We're not reading noise factor */
+                            n.push_back(std::stod(sPar));
+                        } else { /* We're reading noise factor */
+                            isNoise = true;
+                            if(count == 1) { /* We read Fmin */
+                                Fmin = std::stod(sPar);
+                            } else if(count == 4) {
+                                normRes = std::stod(sPar);
+                            } else {
+                                n.push_back(std::stod(sPar));
+                            }
+                        }
                     }
                 }
                 count++;
@@ -119,7 +136,10 @@ void TouchstoneParser::ParseV1() {
 
             break;
         case(MA):
-            convertMAtoRI(n, count);
+            if(!isNoise)
+                convertMAtoRI(n, count);
+            else
+                convertMAtoRI(n, 2);
             break;
         case(RI):
             /* Nothing to do :) */
@@ -136,15 +156,26 @@ void TouchstoneParser::ParseV1() {
         }
 
         /* store data */
-        SData sp;
-        sp.freq = freq;
+        if(!isNoise) {
+            SData sp;
+            sp.freq = freq;
 
-        for(uint8_t i = 0; i < count-1; i=i+2) {
-            std::complex<double> a(n[i], n[i+1]);
-            sp.S.push_back(a);
+            for(uint8_t i = 0; i < count-1; i=i+2) {
+                std::complex<double> a(n[i], n[i+1]);
+                sp.S.push_back(a);
+            }
+
+            Sparam.push_back(sp);
+        } else {
+            NData np;
+            np.freq = freq;
+            np.Fmin = Fmin;
+            std::complex<double> a(n[0], n[1]);
+            np.S = a;
+
+            Nparam.push_back(np);
         }
-
-        Sparam.push_back(sp);
+        oldFreq = freq;
     }
     dataValid = true;
 }

@@ -21,14 +21,20 @@ enum DataFormat { DB, MA, RI};
 
 typedef std::complex<double> ComplexDouble;
 
-struct SData{
+struct SData {
     uint64_t freq = 0;
     std::vector<std::complex<double>> S;
 };
 
+struct NData {
+    uint64_t freq = 0;
+    double Fmin = 0.0;
+    std::complex<double> S;
+};
+
 class TouchstoneParser {
 
-  private:
+  public:
     std::stringstream filebuffer;
 
     std::string comments;
@@ -42,6 +48,7 @@ class TouchstoneParser {
     double Z0 = 50;
 
     std::vector<SData> Sparam;
+    std::vector<NData> Nparam;
 
     void ParseV1();
     void ParseV2();
@@ -52,7 +59,6 @@ class TouchstoneParser {
 
     void convertMAtoRI(std::vector<double>& n, uint8_t count);
   
-  public:
     /* Init with a file */
     TouchstoneParser(std::ifstream& in);
 
