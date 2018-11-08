@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+const double PI = 3.141592653589793238463;
+
 enum ParseOptionState { Freq, Param, Format, Z };
 enum ParamFormat {Sf, Yf, Zf, Hf, Gf};
 enum DataFormat { DB, MA, RI};

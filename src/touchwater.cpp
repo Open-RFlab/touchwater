@@ -185,9 +185,9 @@ void TouchstoneParser::convertMAtoRI(std::vector<double>& n, uint8_t count) {
     for(uint8_t i = 0; i < count; i++) {
         if(i%2 == 0) {
             mag = n[i];
-            n[i] = mag * std::cos(n[i]);
+            n[i] = mag * std::cos(n[i+1]/180*PI);
         } else {
-            n[i] = mag * std::sin(n[i]);
+            n[i] = mag * std::sin(n[i]/180*PI);
         }
     }
 }
